@@ -31,7 +31,10 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
+
+#define MAX_TERRITORIOS 5
 
 typedef struct {
     char nome[50];
@@ -39,22 +42,79 @@ typedef struct {
     int numTropas;
 } Territorio;
 
-void cadastrarTerritorios(Territorio *territorios, int n) {
-    for (int i = 0; i < n; i++) {
-        printf("Digite o nome do território %d: ", i + 1);
-        fgets(territorios[i].nome, 50, stdin);
-        printf("Digite a cor do exército dominante: ");
-        fgets(territorios[i].corExercito, 20, stdin);
-        printf("Digite o número de tropas: ");
-        scanf("%d", &territorios[i].numTropas);
-        getchar(); // Limpar buffer
-    }
+typedef enum { MISSao_DESTRUIR_VERDE, MISSao_CONQUISTAR_3 } Missao;
+
+void inicializarTerritorios(Territorio territorios[]);
+void exibirTerritorios(const Territorio territorios[]);
+void atacar(Territorio territorios[]);
+int verificarMissao(const Territorio territorios[], Missao missao);
+void menu();
+
+
+// --- Função Principal (main) ---
+// Função principal que orquestra o fluxo do jogo, chamando as outras funções em ordem.
+int main() {
+    Territorio territorios[MAX_TERRITORIOS];
+    Missao missao;
+    int escolha;
+    srand(time(NULL));
+
+    inicializarTerritorios(territorios);
+    missao = (rand() % 2 == 0) ? MISSao_DESTRUIR_VERDE : MISSao_CONQUISTAR_3;
+
+    do {
+        menu();
+        scanf("%d", &escolha);
+        getchar();
+
+        switch (escolha) {
+            case 1:
+                atacar(territorios);
+                break;
+            case 2:
+                if (verificarMissao(territorios, missao))
+                    printf("Missão cumprida! Parabéns!\n");
+                else
+                    printf("Missão ainda não concluída.\n");
+                break;
+            case 0:
+                printf("Saindo do jogo.\n");
+                break;
+            default:
+                printf("Opção inválida.\n");
+        }
+    } while (escolha != 0);
+
+    return 0;
 }
 
-void exibirTerritorios(Territorio *territorios, int n) {
-    printf("\nEstado Atual dos Territórios:\n");
-    for (int i = 0; i < n; i++) {
-        printf("Território %d: %sCor: %sNúmero de Tropas: %d\n\n",
+void inicializarTerritorios(Territorio territorios[]) {
+    // Exemplo de inicialização automática
+    strcpy(territorios[0].nome, "Território 1\n");
+    strcpy(territorios[0].corExercito, "Verde\n");
+    territorios[0].numTropas = 5;
+
+    strcpy(territorios[1].nome, "Território 2\n");
+    strcpy(territorios[1].corExercito, "Vermelho\n");
+    territorios[1].numTropas = 3;
+
+    strcpy(territorios[2].nome, "Território 3\n");
+    strcpy(territorios[2].corExercito, "Azul\n");
+    territorios[2].numTropas = 4;
+
+    strcpy(territorios[3].nome, "Território 4\n");
+    strcpy(territorios[3].corExercito, "Verde\n");
+    territorios[3].numTropas = 2;
+
+    strcpy(territorios[4].nome, "Território 5\n");
+    strcpy(territorios[4].corExercito, "Amarelo\n");
+    territorios[4].numTropas = 6;
+}
+
+void exibirTerritorios(const Territorio territorios[]) {
+    printf("\nEstado atual dos territórios:\n");
+    for (int i = 0; i < MAX_TERRITORIOS; i++) {
+        printf("Território %d: %sCor: %sNúmero de Tropas: %d\n",
                i + 1,
                territorios[i].nome,
                territorios[i].corExercito,
@@ -62,51 +122,61 @@ void exibirTerritorios(Territorio *territorios, int n) {
     }
 }
 
-void simularAtaque(Territorio *territorios, int atacante, int defensor) {
-    int dadosAtacante = rand() % 6 + 1;
-    int dadosDefensor = rand() % 6 + 1;
+void atacar(Territorio territorios[]) {
+    int atacante, defensor;
+    int dadosAtacante, dadosDefensor;
+
+    exibirTerritorios(territorios);
+
+    printf("Digite o território atacante (1-5): ");
+    scanf("%d", &atacante);
+    printf("Digite o território defensor (1-5): ");
+    scanf("%d", &defensor);
+
+    dadosAtacante = rand() % 6 + 1;
+    dadosDefensor = rand() % 6 + 1;
 
     printf("Dados do atacante: %d\n", dadosAtacante);
     printf("Dados do defensor: %d\n", dadosDefensor);
 
     if (dadosAtacante >= dadosDefensor) {
-        territorios[defensor].numTropas--;
+        territorios[defensor - 1].numTropas--;
         printf("Atacante venceu! Defensor perde uma tropa.\n");
-        if (territorios[defensor].numTropas <= 0) {
-            printf("Território %d conquistado pelo atacante!\n", defensor + 1);
-            // Mudança de cor para indicar conquista pode ser adicionada
+        if (territorios[defensor - 1].numTropas <= 0) {
+            printf("Território %d conquistado!\n", defensor);
+            strcpy(territorios[defensor - 1].corExercito, territorios[atacante - 1].corExercito);
+            territorios[defensor - 1].numTropas = 1;
         }
     } else {
         printf("Defensor venceu! Nenhuma tropa perdida.\n");
     }
 }
 
-// --- Função Principal (main) ---
-// Função principal que orquestra o fluxo do jogo, chamando as outras funções em ordem.
-int main() {
-    int n = 5;
-    Territorio *territorios = (Territorio *)calloc(n, sizeof(Territorio));
-    if (!territorios) {
-        printf("Falha na alocação de memória.\n");
-        return 1;
+int verificarMissao(const Territorio territorios[], Missao missao) {
+    int countVerde = 0;
+    int countTerritoriosConquistados = 0;
+    for (int i = 0; i < MAX_TERRITORIOS; i++) {
+        if (strcmp(territorios[i].corExercito, "Verde\n") == 0) {
+            countVerde++;
+        } else {
+            countTerritoriosConquistados++;
+        }
     }
 
-    srand(time(NULL));
-
-    cadastrarTerritorios(territorios, n);
-    exibirTerritorios(territorios, n);
-
-    int atacante, defensor;
-    printf("Digite o território atacante (1-5): ");
-    scanf("%d", &atacante);
-    printf("Digite o território defensor (1-5): ");
-    scanf("%d", &defensor);
-
-    simularAtaque(territorios, atacante - 1, defensor - 1);
-    exibirTerritorios(territorios, n);
-
-    free(territorios);
+    if (missao == MISSao_DESTRUIR_VERDE) {
+        return countVerde == 0;
+    } else if (missao == MISSao_CONQUISTAR_3) {
+        return countTerritoriosConquistados >= 3;
+    }
     return 0;
+}
+
+void menu() {
+    printf("\nMenu:\n");
+    printf("1 - Atacar\n");
+    printf("2 - Verificar Missão\n");
+    printf("0 - Sair\n");
+    printf("Escolha uma opção: ");
 }
 
 // --- Implementação das Funções ---
