@@ -29,28 +29,44 @@
 // Funções de lógica principal do jogo:
 // Função utilitária:
 
+#include <stdio.h>
+#define MAX_TERRITORIOS 5
+
+typedef struct {
+    char nome[50];
+    char corExercito[20];
+    int numTropas;
+} Territorio;
+
+void cadastrarTerritorios(Territorio territorios[]) {
+    for (int i = 0; i < MAX_TERRITORIOS; i++) {
+        printf("Digite o nome do território %d: ", i + 1);
+        fgets(territorios[i].nome, sizeof(territorios[i].nome), stdin);
+        printf("Digite a cor do exército dominante: ");
+        fgets(territorios[i].corExercito, sizeof(territorios[i].corExercito), stdin);
+        printf("Digite o número de tropas: ");
+        scanf("%d", &territorios[i].numTropas);
+        getchar(); // Limpar o buffer do teclado
+    }
+}
+
+void exibirTerritorios(Territorio territorios[]) {
+    printf("\nEstado atual dos territórios:\n");
+    for (int i = 0; i < MAX_TERRITORIOS; i++) {
+        printf("Território %d: %sCor: %sNúmero de Tropas: %d\n\n",
+               i + 1,
+               territorios[i].nome,
+               territorios[i].corExercito,
+               territorios[i].numTropas);
+    }
+}
+
 // --- Função Principal (main) ---
 // Função principal que orquestra o fluxo do jogo, chamando as outras funções em ordem.
 int main() {
-    // 1. Configuração Inicial (Setup):
-    // - Define o locale para português.
-    // - Inicializa a semente para geração de números aleatórios com base no tempo atual.
-    // - Aloca a memória para o mapa do mundo e verifica se a alocação foi bem-sucedida.
-    // - Preenche os territórios com seus dados iniciais (tropas, donos, etc.).
-    // - Define a cor do jogador e sorteia sua missão secreta.
-
-    // 2. Laço Principal do Jogo (Game Loop):
-    // - Roda em um loop 'do-while' que continua até o jogador sair (opção 0) ou vencer.
-    // - A cada iteração, exibe o mapa, a missão e o menu de ações.
-    // - Lê a escolha do jogador e usa um 'switch' para chamar a função apropriada:
-    //   - Opção 1: Inicia a fase de ataque.
-    //   - Opção 2: Verifica se a condição de vitória foi alcançada e informa o jogador.
-    //   - Opção 0: Encerra o jogo.
-    // - Pausa a execução para que o jogador possa ler os resultados antes da próxima rodada.
-
-    // 3. Limpeza:
-    // - Ao final do jogo, libera a memória alocada para o mapa para evitar vazamentos de memória.
-
+    Territorio territorios[MAX_TERRITORIOS];
+    cadastrarTerritorios(territorios);
+    exibirTerritorios(territorios);
     return 0;
 }
 
