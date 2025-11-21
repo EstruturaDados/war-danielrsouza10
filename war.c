@@ -30,7 +30,8 @@
 // Função utilitária:
 
 #include <stdio.h>
-#define MAX_TERRITORIOS 5
+#include <stdlib.h>
+#include <time.h>
 
 typedef struct {
     char nome[50];
@@ -38,21 +39,21 @@ typedef struct {
     int numTropas;
 } Territorio;
 
-void cadastrarTerritorios(Territorio territorios[]) {
-    for (int i = 0; i < MAX_TERRITORIOS; i++) {
+void cadastrarTerritorios(Territorio *territorios, int n) {
+    for (int i = 0; i < n; i++) {
         printf("Digite o nome do território %d: ", i + 1);
-        fgets(territorios[i].nome, sizeof(territorios[i].nome), stdin);
+        fgets(territorios[i].nome, 50, stdin);
         printf("Digite a cor do exército dominante: ");
-        fgets(territorios[i].corExercito, sizeof(territorios[i].corExercito), stdin);
+        fgets(territorios[i].corExercito, 20, stdin);
         printf("Digite o número de tropas: ");
         scanf("%d", &territorios[i].numTropas);
-        getchar(); // Limpar o buffer do teclado
+        getchar(); // Limpar buffer
     }
 }
 
-void exibirTerritorios(Territorio territorios[]) {
-    printf("\nEstado atual dos territórios:\n");
-    for (int i = 0; i < MAX_TERRITORIOS; i++) {
+void exibirTerritorios(Territorio *territorios, int n) {
+    printf("\nEstado Atual dos Territórios:\n");
+    for (int i = 0; i < n; i++) {
         printf("Território %d: %sCor: %sNúmero de Tropas: %d\n\n",
                i + 1,
                territorios[i].nome,
@@ -61,12 +62,50 @@ void exibirTerritorios(Territorio territorios[]) {
     }
 }
 
+void simularAtaque(Territorio *territorios, int atacante, int defensor) {
+    int dadosAtacante = rand() % 6 + 1;
+    int dadosDefensor = rand() % 6 + 1;
+
+    printf("Dados do atacante: %d\n", dadosAtacante);
+    printf("Dados do defensor: %d\n", dadosDefensor);
+
+    if (dadosAtacante >= dadosDefensor) {
+        territorios[defensor].numTropas--;
+        printf("Atacante venceu! Defensor perde uma tropa.\n");
+        if (territorios[defensor].numTropas <= 0) {
+            printf("Território %d conquistado pelo atacante!\n", defensor + 1);
+            // Mudança de cor para indicar conquista pode ser adicionada
+        }
+    } else {
+        printf("Defensor venceu! Nenhuma tropa perdida.\n");
+    }
+}
+
 // --- Função Principal (main) ---
 // Função principal que orquestra o fluxo do jogo, chamando as outras funções em ordem.
 int main() {
-    Territorio territorios[MAX_TERRITORIOS];
-    cadastrarTerritorios(territorios);
-    exibirTerritorios(territorios);
+    int n = 5;
+    Territorio *territorios = (Territorio *)calloc(n, sizeof(Territorio));
+    if (!territorios) {
+        printf("Falha na alocação de memória.\n");
+        return 1;
+    }
+
+    srand(time(NULL));
+
+    cadastrarTerritorios(territorios, n);
+    exibirTerritorios(territorios, n);
+
+    int atacante, defensor;
+    printf("Digite o território atacante (1-5): ");
+    scanf("%d", &atacante);
+    printf("Digite o território defensor (1-5): ");
+    scanf("%d", &defensor);
+
+    simularAtaque(territorios, atacante - 1, defensor - 1);
+    exibirTerritorios(territorios, n);
+
+    free(territorios);
     return 0;
 }
 
